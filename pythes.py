@@ -57,12 +57,16 @@ ThesaurusEntry = namedtuple('ThesaurusEntry', 'word mean_tuple')
 Mean = namedtuple('Mean', 'pos main syn_tuple')
 
 
-class ExcIndexLinesCount(Exception):
+class ExcPyThes(Exception):
+    '''Generic exception'''
+    pass
+
+class ExcIndexLinesCount(ExcPyThes):
     '''Read line count doesn't match with expected'''
     pass
 
 
-class ExcLookupMissmatch(Exception):
+class ExcLookupMissmatch(ExcPyThes):
     '''Entry found at byte offset into data file does not match lookup word'''
     pass
 
@@ -99,6 +103,7 @@ class PyThes:
                 syn1_mean - synonym 1 also used to describe the meaning itself 
                 syn2      - synonym 2 for that meaning etc.
         '''
+        word = word.lower()
         try:
             # find word in the index
             offset_into_dat = self.index[word]
@@ -112,8 +117,8 @@ class PyThes:
 
             # grab entry and count of the number of meanings
             entry, num_mean = dat_f.readline().split('|')
-            if entry != word:
-                raise ExcLookupMissmatch()
+            if entry.lower() != word:
+                raise ExcLookupMissmatch('search "{}", get "{}"'.format(word, entry))
             num_mean = int(num_mean)
 
             # get each meaning
@@ -142,7 +147,7 @@ class PyThes:
             cnt = 0  # now parse the remaining lines of the index
             for line in idx_f:
                 word = line.split('|')
-                word_idx[word[0]] = int(word[1])
+                word_idx[word[0].lower()] = int(word[1])
                 cnt += 1
             if idx_size != cnt:
                 raise ExcIndexLinesCount()
