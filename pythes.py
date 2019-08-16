@@ -70,9 +70,9 @@ class ExcLookupMissmatch(Exception):
 class PyThes:
 
     def __init__(self, idx_path, dat_path):
-        '''Open .idx and .dat files and create list of words'''
-        self.index = self.parse_index(idx_path)
-        self.dat_codec = self.get_encoding_type(dat_path)
+        '''Get thesaurus index and data files'''
+        self.index = self.get_index(idx_path)
+        self.dat_encoding = self.get_encoding(dat_path)
         self.dat_path = dat_path
 
     def lookup(self, word):
@@ -107,7 +107,7 @@ class PyThes:
             return None
 
         meanings = ()
-        with open(self.dat_path, 'r', encoding=self.dat_codec) as dat_f:
+        with open(self.dat_path, 'r', encoding=self.dat_encoding) as dat_f:
             dat_f.seek(offset_into_dat)
 
             # grab entry and count of the number of meanings
@@ -123,8 +123,9 @@ class PyThes:
 
         return ThesaurusEntry(word, meanings)
 
-    def parse_index(self, idx_path):
-        '''Return dictionary {entry : offset} from thesaurus index.
+    def get_index(self, idx_path):
+        '''Returns the thesaurus index file content as a dictionary of pairs
+        { entry: byte_offset_into_data_file }
 
         Thesaurus index is a text file with the following lines content:
             Line 1: a string describes the encoding subsequently used;
@@ -134,7 +135,7 @@ class PyThes:
                 entry|byte_offset_into_data_file_where_entry_is_found
         '''
         word_idx = {}
-        idx_codec = self.get_encoding_type(idx_path)
+        idx_codec = self.get_encoding(idx_path)
         with open(idx_path, 'r', encoding=idx_codec) as idx_f:
             idx_f.readline()  # skip first line (file encoding)
             idx_size = int(idx_f.readline())
@@ -147,9 +148,15 @@ class PyThes:
                 raise ExcIndexLinesCount()
         return word_idx
 
-    def get_encoding_type(self, text_file):
-        '''Return first line of text_file as encoding type'''
-        with open(text_file, 'rb') as f:
+    def get_encoding(self, thesaurus_file):
+        '''Returns first line of thesaurus_file as encoding type.
+
+        thesaurus_file is a text file where line 1 describes the encoding used.
+        This function opens the source text file in encoding-agnostic mode,
+        that is binary, to get the ASCII string revealing the encoding type
+        that will be later used to re-open the thesaurus_file in text mode.
+        '''
+        with open(thesaurus_file, 'rb') as f:
             # convert first binary line to string, removing trailing newline
             encoding_type = f.readline().decode('ascii').rstrip('\n')
         return encoding_type
