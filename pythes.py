@@ -163,4 +163,12 @@ class PyThes:
 
 
 if __name__ == "__main__":
-    pass
+    # Paths are relative to VsCode workspace folder
+    th = PyThes('dict-it/dictionaries/th_it_IT_v2.idx',
+                'dict-it/dictionaries/th_it_IT_v2.dat')
+
+    # Verify that there is a thesaurus entry for each word in the index
+    print('Searching {} words...'.format(len(th.index)))
+    for word in th.index:
+        th.lookup(word)
+    print('Done!')
