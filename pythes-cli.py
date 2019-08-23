@@ -20,11 +20,10 @@ def main(argv):
         print('SYNTAX: {} <path-to-thesaurus-files> <lookup-word>'
                                             .format(basename(argv[0])))
         return -1
-    data_file_name = argv[1] + '.dat'
-    index_file_name = argv[1] + '.idx'
+    thes_filepath = argv[1]
     word_to_lookup = argv[2]
     try:
-        th = PyThes(index_file_name, data_file_name)
+        th = PyThes(thes_filepath)
     except FileNotFoundError as e:
         print('ERROR: {}: "{}"'.format(e.strerror, e.filename))
         return -1

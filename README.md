@@ -11,14 +11,14 @@ for words and related information on part of speech, meanings and synonyms.
 **PyThes-cli** is simple example script that looks up a word and returns
 its meaning and synonyms.
 
-Hunspell thesaurus consists of a couple of file: `.dat` is a structured
-text data file and `.idx` is its index file.
+Hunspell thesaurus consists of a `.dat` structured text data file
+and an optional `.idx` index file.
 You can find their description in the `data_layout.txt` file.
 
 The root name of LibreOffice / OpenOffice thesaurus files is prefixed by `th_`
 following Language and Country Code, more an optional suffix, e.g.:
 ```
-th_en_US_new.dat th_en_US_new.idx
+th_en_US_v2.dat th_en_US_v2.idx
 th_it_IT_v2.dat th_it_IT_v2.idx
 ```
 
@@ -40,6 +40,7 @@ and morphological generation.
 LibreOffice language bundles:
 - https://cgit.freedesktop.org/libreoffice/dictionaries/tree/
 - https://wiki.documentfoundation.org/Language_support_of_LibreOffice
+- https://github.com/LibreOffice/dictionaries
 
 Language bundles are deployed in a single `.oxt` compressed file.
 If your archive manager doesn't open `.oxt` file, then rename it as `.zip`

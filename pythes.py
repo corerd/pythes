@@ -9,7 +9,28 @@ PyThes is a Python port of C++ MyThes class, whose project page is:
 PyThes class uses Hunspell structured thesaurus data files
 whose description can be found in the original project repository:
 - https://github.com/hunspell/mythes/blob/master/data_layout.txt
-A copy of such file is also available in this repository.
+
+Thesaurus files are bundled in LibreOffice / OpenOffice Language Packs
+together spellchecking and hyphenation dictionaries used for stemming
+and morphological generation.
+
+The root name of thesaurus files is prefixed by th_ following Language
+and Country Code, more an optional suffix, e.g.:
+
+th_en_US_v2.dat th_en_US_v2.idx
+th_it_IT_v2.dat th_it_IT_v2.idx
+
+
+LibreOffice language bundles
+----------------------------
+- https://cgit.freedesktop.org/libreoffice/dictionaries/tree/
+- https://wiki.documentfoundation.org/Language_support_of_LibreOffice
+- https://github.com/LibreOffice/dictionaries
+
+Language bundles are deployed in a single .oxt compressed file.
+If your archive manager doesn't open .oxt file, then rename it as .zip
+and there you have it.
+
 
 Disclaimer
 ----------
@@ -20,9 +41,11 @@ organizations and individuals mentioned above.
 None of them can be hold liable for any damages arising out of the use
 of this software.
 
+
 MIT License
 ---------------
 Copyright (c) 2019 Corrado Ubezio
+https://github.com/corerd/pythes
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -42,6 +65,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
+from os.path import abspath, splitext, isfile
 from collections import namedtuple
 
 
@@ -73,11 +97,50 @@ class ExcLookupMissmatch(ExcPyThes):
 
 class PyThes:
 
-    def __init__(self, idx_path, dat_path):
-        '''Get thesaurus index and data files'''
-        self.index = self.get_index(idx_path)
-        self.dat_encoding = self.get_encoding(dat_path)
-        self.dat_path = dat_path
+    def __init__(self, thes_filepath):
+        '''Gets from thes_filepath the thesaurus files names
+        and loads the index file content as a dictionary of pairs
+        { entry: byte_offset_into_data_file }
+
+        thes_filepath can be:
+            - root name of files
+            - path to the thesaurus index file
+            - path to the thesaurus data file
+        '''
+        self.idx_path, self.dat_path = self.get_filenames(thes_filepath)
+        self.dat_encoding = self.get_encoding(self.dat_path)
+        if self.idx_path == '':
+            self.index = self.get_index_from_dat(self.dat_path)
+        else:
+            self.index = self.get_index(self.idx_path)
+
+    def get_filenames(self, filepath):
+        '''Returns the couple of index, data files names from filepath
+
+        The thesaurus consist of two files:
+            - an optional index file (".idx" extension)
+            - the data file (".dat" extension)
+
+        filepath can be:
+            - root name of files (without extemsion)
+            - path to the thesaurus index file
+            - path to the thesaurus data file
+        '''
+        rootname, ext = splitext(filepath)
+        if ext is '.idx':
+            idx_path = filepath
+            dat_path = rootname + '.dat'
+        elif ext is '.dat':
+            idx_path = rootname + '.idx'
+            dat_path = filepath
+        else:
+            idx_path = rootname + '.idx'
+            dat_path = rootname + '.dat'
+        dat_path = abspath(dat_path)
+        idx_path = abspath(idx_path)
+        if isfile(idx_path) is not True:
+            idx_path = ''
+        return idx_path, dat_path
 
     def lookup(self, word):
         '''Returns ThesaurusEntry namedtuple related to the word
@@ -116,7 +179,8 @@ class PyThes:
             dat_f.seek(offset_into_dat)
 
             # grab entry and count of the number of meanings
-            entry, num_mean = dat_f.readline().split('|')
+            line = dat_f.readline()
+            entry, num_mean = line.split('|')
             if entry.lower() != word:
                 raise ExcLookupMissmatch('search "{}", get "{}"'.format(word, entry))
             num_mean = int(num_mean)
@@ -127,6 +191,26 @@ class PyThes:
                 meanings += (Mean(mean[0], mean[1], tuple(mean[2:])),)
 
         return ThesaurusEntry(word, meanings)
+
+    def get_index_from_dat(self, dat_path):
+        '''Returns a dictionary of pairs { entry: byte_offset_into_data_file }
+        from the thesaurus data file
+        '''
+        word_idx = {}
+        with open(dat_path, 'r', encoding=self.dat_encoding) as dat_f:
+            dat_f.readline()  # skip first line (file encoding)
+            entry_byte_offset = dat_f.tell()
+            while True:
+                line = dat_f.readline()
+                if line == '':
+                    # the end of the file has been reached
+                    break
+                entry, num_mean = line.split('|')
+                word_idx[entry.lower()] = entry_byte_offset
+                for _ in range(int(num_mean)):
+                    dat_f.readline()  # skip description lines
+                entry_byte_offset = dat_f.tell()
+        return word_idx
 
     def get_index(self, idx_path):
         '''Returns the thesaurus index file content as a dictionary of pairs
@@ -168,12 +252,18 @@ class PyThes:
 
 
 if __name__ == "__main__":
-    # Paths are relative to VsCode workspace folder
-    th = PyThes('dict-it/dictionaries/th_it_IT_v2.idx',
-                'dict-it/dictionaries/th_it_IT_v2.dat')
-
-    # Verify that there is a thesaurus entry for each word in the index
-    print('Searching {} words...'.format(len(th.index)))
-    for word in th.index:
-        th.lookup(word)
+    # TEST BENCH: check integrity of thesaurus data files
+    # checking thesaurus data entry for each word in the index
+    dictionaries = (
+        '../dictionaries/en_US/th_en_US_v2',
+        '../dictionaries/it_IT/th_it_IT_v2',
+        '../dictionaries/ca_ES/dictionaries/th_ca_ES_v3'
+    )
+    for thesaurus in dictionaries:
+        th = PyThes(thesaurus)
+        print('Data file: {}'.format(th.dat_path))
+        print('Index file: {}'.format(th.idx_path))
+        print('Searching {} words...'.format(len(th.index)))
+        for word in th.index:
+            th.lookup(word)
     print('Done!')
