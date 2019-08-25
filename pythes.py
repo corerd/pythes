@@ -20,7 +20,6 @@ and Country Code, more an optional suffix, e.g.:
 th_en_US_v2.dat th_en_US_v2.idx
 th_it_IT_v2.dat th_it_IT_v2.idx
 
-
 LibreOffice language bundles
 ----------------------------
 - https://cgit.freedesktop.org/libreoffice/dictionaries/tree/
@@ -31,7 +30,6 @@ Language bundles are deployed in a single .oxt compressed file.
 If your archive manager doesn't open .oxt file, then rename it as .zip
 and there you have it.
 
-
 Disclaimer
 ----------
 The author of this software is not affiliated, associated, authorized,
@@ -40,7 +38,6 @@ organizations and individuals mentioned above.
 
 None of them can be hold liable for any damages arising out of the use
 of this software.
-
 
 MIT License
 ---------------
@@ -85,6 +82,7 @@ class ExcPyThes(Exception):
     '''Generic exception'''
     pass
 
+
 class ExcIndexLinesCount(ExcPyThes):
     '''Read line count doesn't match with expected'''
     pass
@@ -110,9 +108,13 @@ class PyThes:
         self.idx_path, self.dat_path = self.get_filenames(thes_filepath)
         self.dat_encoding = self.get_encoding(self.dat_path)
         if self.idx_path == '':
-            self.index = self.get_index_from_dat(self.dat_path)
+            self.index = self.load_index_from_dat(self.dat_path)
         else:
-            self.index = self.get_index(self.idx_path)
+            self.index = self.load_index(self.idx_path)
+
+    def getIndex(self):
+        '''Returns the index dictionary'''
+        return self.index
 
     def get_filenames(self, filepath):
         '''Returns the couple of index, data files names from filepath
@@ -192,7 +194,7 @@ class PyThes:
 
         return ThesaurusEntry(word, meanings)
 
-    def get_index_from_dat(self, dat_path):
+    def load_index_from_dat(self, dat_path):
         '''Returns a dictionary of pairs { entry: byte_offset_into_data_file }
         from the thesaurus data file
         '''
@@ -212,7 +214,7 @@ class PyThes:
                 entry_byte_offset = dat_f.tell()
         return word_idx
 
-    def get_index(self, idx_path):
+    def load_index(self, idx_path):
         '''Returns the thesaurus index file content as a dictionary of pairs
         { entry: byte_offset_into_data_file }
 
@@ -264,6 +266,6 @@ if __name__ == "__main__":
         print('Data file: {}'.format(th.dat_path))
         print('Index file: {}'.format(th.idx_path))
         print('Searching {} words...'.format(len(th.index)))
-        for word in th.index:
+        for word in th.getIndex():
             th.lookup(word)
     print('Done!')
