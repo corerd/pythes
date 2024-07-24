@@ -129,10 +129,10 @@ class PyThes:
             - path to the thesaurus data file
         '''
         rootname, ext = splitext(filepath)
-        if ext is '.idx':
+        if ext == '.idx':
             idx_path = filepath
             dat_path = rootname + '.dat'
-        elif ext is '.dat':
+        elif ext == '.dat':
             idx_path = rootname + '.idx'
             dat_path = filepath
         else:
