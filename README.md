@@ -37,14 +37,20 @@ Thesaurus files are bundled in LibreOffice / OpenOffice Language Packs
 together spellchecking and hyphenation dictionaries used for stemming
 and morphological generation.
 
-LibreOffice language bundles:
-- https://cgit.freedesktop.org/libreoffice/dictionaries/tree/
-- https://wiki.documentfoundation.org/Language_support_of_LibreOffice
-- https://github.com/LibreOffice/dictionaries
+Goto to [Document Foundation Language/Support](https://wiki.documentfoundation.org/Language_support_of_LibreOffice)
+and search for you language.
 
-Language bundles are deployed in a single `.oxt` compressed file.
-If your archive manager doesn't open `.oxt` file, then rename it as `.zip`
+Language bundles are deployed as a single `.oxt` compressed file.
+
+You can use an archive manager like 7-Zip to open the bundle and extract
+the thesaurus file `.dat` and `.idx`.
+
+If your archive manager doesn't recognize `.oxt` file, then rename it as `.zip`
 and there you have it.
+
+In the following web pages you can find the `.dat` files only:
+- https://cgit.freedesktop.org/libreoffice/dictionaries/tree/
+- https://github.com/LibreOffice/dictionaries
 
 
 Other dictionaries
