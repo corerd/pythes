@@ -2,7 +2,7 @@
 '''
 import sys
 from ntpath import basename
-from pythes import PyThes
+from pythes.pythes import PyThes
 
 
 def display(word_meanings):
